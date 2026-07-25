@@ -1,0 +1,45 @@
+# --- Vendored / third-party ML source (never commit; see README) ---
+av_hubert/
+fairseq/
+
+# --- Model weights & checkpoints ---
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.zip
+
+# --- Datasets, run outputs, uploads, caches ---
+data/
+runs/
+runs_uploads/
+tools/
+test_videos/
+rah_videos*/
+*.mp4
+*.avi
+*.mov
+*.db
+*.sqlite
+*.sqlite3
+uploads/
+__pycache__/
+*.pyc
+
+# --- Flutter / Dart ---
+flutter_app/build/
+flutter_app/.dart_tool/
+flutter_app/.idea/
+**/.gradle/
+**/.kotlin/
+
+# --- Android ---
+*.apk
+*.aab
+local.properties
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,126 @@
+# @package _group_
+# Joint fine-tuning of AV-HuBERT Base (LRS3-433h VSR) on
+#   LRS3-trainval (70%) + MIRACL-VC1 oversampled x3 (20%) + GRID (10%).
+#
+# Single-GPU, <=16 GB VRAM, fp16. Stage A = head-only (encoder frozen).
+# For Stage B (top-4 unfreeze) use CLI overrides — see scripts/train_stage_b.sh.
+common:
+  fp16: true
+  log_format: json
+  log_interval: 100
+  tensorboard_logdir: tblog
+  seed: 1337
+  user_dir: ???                         # -> absolute path of ./avhubert_ext
+
+checkpoint:
+  save_interval_updates: 1000
+  keep_interval_updates: 2
+  no_epoch_checkpoints: true
+  best_checkpoint_metric: accuracy
+  maximize_best_checkpoint_metric: true
+
+distributed_training:
+  ddp_backend: c10d
+  find_unused_parameters: true
+  distributed_world_size: 1
+  nprocs_per_node: 1
+
+task:
+  _name: av_hubert_pretraining          # reuse stock task; joint mixing is done
+                                        # in the manifest (scripts/05_...).
+                                        # Swap to 'joint_finetune' (our user_dir
+                                        # task) if using ConcatWeightedDataset.
+  is_s2s: true
+  data: ???                             # dir with joint {train,valid}.tsv/.wrd
+  label_dir: ???                        # usually same as data
+  tokenizer_bpe_model: ???              # spm_unigram1000.model (from ckpt)
+  tokenizer_bpe_name: sentencepiece
+  normalize: true                       # MUST match pretraining
+  labels: ["wrd"]
+  single_target: true
+  fine_tuning: true
+  stack_order_audio: 4
+  max_sample_size: 500                  # video frames
+  modalities: ["video"]
+  image_aug: true
+  pad_audio: true
+  random_crop: false
+
+dataset:
+  num_workers: 4
+  max_tokens: 800                       # drop to 600 if OOM on 16 GB
+  validate_after_updates: 500
+  validate_interval_updates: 1000
+  train_subset: train
+  valid_subset: valid
+  skip_invalid_size_inputs_valid_test: true
+
+criterion:
+  _name: label_smoothed_cross_entropy
+  report_accuracy: true
+  label_smoothing: 0.1
+
+optimization:
+  max_update: 8000
+  lr: [5e-4]
+  sentence_avg: true
+  update_freq: [4]                      # effective batch ~ 4 * max_tokens
+
+optimizer:
+  _name: adam
+  adam_betas: (0.9,0.98)
+  adam_eps: 1e-08
+  weight_decay: 1e-4
+
+lr_scheduler:
+  _name: tri_stage
+  warmup_steps: 1500
+  hold_steps: 0
+  decay_steps: 6500
+  final_lr_scale: 0.05
+
+model:
+  _name: av_hubert_seq2seq
+  w2v_path: ???                         # base_vsr_trainval.pt
+  apply_mask: false
+  mask_selection: static
+  mask_length: 10
+  mask_other: 0
+  mask_prob: 0.75
+  mask_channel_selection: static
+  mask_channel_length: 64
+  mask_channel_other: 0
+  mask_channel_prob: 0.5
+  layerdrop: 0.0
+  dropout: 0.0
+  activation_dropout: 0.1
+  attention_dropout: 0.0
+  feature_grad_mult: 0.0                # Stage A: encoder fully frozen
+  freeze_finetune_updates: 8000         # == max_update -> never unfreezes
+  decoder_layers: 6
+  decoder_dropout: 0.1
+  decoder_attention_dropout: 0.0
+  decoder_activation_dropout: 0.1
+  share_decoder_input_output_embed: true
+  decoder_normalize_before: true
+
+hydra:
+  job:
+    config:
+      override_dirname:
+        kv_sep: '-'
+        item_sep: '__'
+        exclude_keys:
+          - run
+          - task.data
+          - task.label_dir
+          - task.tokenizer_bpe_model
+          - model.w2v_path
+          - dataset.train_subset
+          - dataset.valid_subset
+          - common.user_dir
+  run:
+    dir: ???
+  sweep:
+    dir: ???
+    subdir: ${hydra.job.config_name}__${hydra.job.override_dirname}

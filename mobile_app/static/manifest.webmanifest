@@ -1,0 +1,30 @@
+{
+  "name": "HearMeOut",
+  "short_name": "HearMeOut",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#061f36",
+  "theme_color": "#061f36",
+  "description": "AI-powered lip reading assistant served from your laptop.",
+  "icons": [
+    {
+      "src": "/assets/hearmeout-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/hearmeout-icon.ico",
+      "sizes": "16x16 24x24 32x32 48x48 64x64 128x128 256x256",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

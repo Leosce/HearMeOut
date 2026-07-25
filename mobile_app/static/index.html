@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#061f36">
+    <title>HearMeOut</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div id="app" class="phone-shell" aria-live="polite"></div>
+    <template id="icon-sprite">
+      <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <symbol id="i-home" viewBox="0 0 24 24">
+          <path d="M3 11.5 12 4l9 7.5v8a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1z"/>
+        </symbol>
+        <symbol id="i-history" viewBox="0 0 24 24">
+          <path d="M4 5v5h5M5.2 14.4a7.5 7.5 0 1 0 1.6-7.8L4 10"/>
+          <path d="M12 8v5l3 2"/>
+        </symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24">
+          <path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2z"/>
+          <path d="M19.4 15a8 8 0 0 0 .1-1.1l2-1.5-2-3.5-2.4 1a8 8 0 0 0-1-.6L15.7 6h-4l-.4 3.3a8 8 0 0 0-1 .6l-2.4-1-2 3.5 2 1.5A8 8 0 0 0 8 15l-2 1.5 2 3.5 2.4-1a8 8 0 0 0 1 .6l.4 3.3h4l.4-3.3a8 8 0 0 0 1-.6l2.4 1 2-3.5z"/>
+        </symbol>
+        <symbol id="i-record" viewBox="0 0 24 24">
+          <rect x="3" y="6" width="12" height="12" rx="3"/>
+          <path d="m15 10 6-3v10l-6-3z"/>
+        </symbol>
+        <symbol id="i-upload" viewBox="0 0 24 24">
+          <path d="M12 16V4M7 9l5-5 5 5"/>
+          <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+          <path d="m5 12 4 4L19 6"/>
+        </symbol>
+        <symbol id="i-back" viewBox="0 0 24 24">
+          <path d="M15 6 9 12l6 6"/>
+        </symbol>
+      </svg>
+    </template>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HearMeOut - AI Lip Reading</title>
+<link rel="icon" href="/assets/hearmeout-icon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/assets/hearmeout-icon.png">
+<link rel="apple-touch-icon" href="/assets/hearmeout-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+[data-theme="dark"]{
+  --bg:#021C37;--surface:#032444;--surface2:#042d56;
+  --border:rgba(0,183,255,0.13);--border2:rgba(0,183,255,0.07);
+  --text:#FFFFFF;--text2:#8899AA;--text3:#4d6a85;
+  --blue:#00B7FF;--blue2:#2D8CFF;--green:#4CAF50;--amber:#FFB347;--red:#FF5C6C;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);--shadow-sm:0 2px 10px rgba(0,0,0,0.25);
+  --input-bg:rgba(0,183,255,0.06);--hover-bg:rgba(0,183,255,0.08);--active-bg:rgba(0,183,255,0.15);--tag-bg:rgba(0,183,255,0.12)
+}
+[data-theme="light"]{
+  --bg:#EEF3F9;--surface:#FFFFFF;--surface2:#E8EFF8;
+  --border:rgba(0,120,190,0.18);--border2:rgba(0,120,190,0.09);
+  --text:#08192E;--text2:#4A6278;--text3:#8AA0B5;
+  --blue:#0088CC;--blue2:#1A6FCC;--green:#2E8B3A;--amber:#B87000;--red:#CC2233;
+  --shadow:0 4px 24px rgba(0,40,80,0.1);--shadow-sm:0 2px 10px rgba(0,40,80,0.07);
+  --input-bg:rgba(0,120,190,0.05);--hover-bg:rgba(0,120,190,0.07);--active-bg:rgba(0,120,190,0.12);--tag-bg:rgba(0,120,190,0.09)
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background .3s,color .3s}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+select,input,textarea{font-family:inherit}
+.app{display:flex;flex-direction:column;height:100vh}
+.body{display:flex;flex:1;overflow:hidden}
+
+/* NAV */
+.topnav{height:64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px 0 0;gap:16px;z-index:200;flex-shrink:0;box-shadow:var(--shadow-sm);transition:background .3s,border-color .3s}
+.brand{width:240px;display:flex;align-items:center;gap:10px;padding:0 20px;flex-shrink:0;border-right:1px solid var(--border)}
+.brand img{width:34px;height:34px;object-fit:contain}
+.brand-name{font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;color:var(--text)}
+.brand-name em{font-style:normal;color:var(--blue)}
+.search-wrap{flex:1;max-width:340px;position:relative}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;width:15px;height:15px;flex-shrink:0}
+.search-wrap input{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:9px 14px 9px 36px;color:var(--text);font-size:13.5px;outline:none;transition:border .2s,background .3s;-webkit-appearance:none;appearance:none}
+.search-wrap input::placeholder{color:var(--text3)}
+.search-wrap input:focus{border-color:var(--blue)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.icon-btn{width:36px;height:36px;border-radius:9px;background:var(--input-bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all .2s;position:relative}
+.icon-btn:hover{background:var(--hover-bg);color:var(--text);border-color:var(--blue)}
+.icon-btn svg{width:16px;height:16px}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue2),var(--blue));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;cursor:pointer;border:2px solid var(--border);background-size:cover;background-position:center}
+.av.has-image{color:transparent}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:14px 10px;flex-shrink:0;overflow-y:auto;transition:background .3s,border-color .3s}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.slabel{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;padding:10px 10px 5px}
+.nitem{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;color:var(--text2);font-size:13.5px;font-weight:500;transition:all .2s;margin-bottom:2px;border:1px solid transparent}
+.nitem:hover{background:var(--hover-bg);color:var(--text)}
+.nitem.active{background:var(--active-bg);color:var(--blue);border-color:var(--border)}
+.nitem svg{width:16px;height:16px;flex-shrink:0}
+.sfoot{margin-top:auto;padding-top:12px;border-top:1px solid var(--border2)}
+.ucard{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:background .2s}
+.ucard:hover{background:var(--hover-bg)}
+.uav{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue2),var(--blue));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;background-size:cover;background-position:center}
+.uav.has-image{color:transparent}
+.uinfo p{font-size:13px;font-weight:600;color:var(--text)}
+.uinfo span{font-size:11px;color:var(--text3)}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:26px 30px;transition:background .3s}
+.main::-webkit-scrollbar{width:6px}
+.main::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.screen{display:none;animation:fu .28s ease}
+.screen.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGE HEADER */
+.pg-tag{display:inline-flex;align-items:center;gap:6px;background:var(--tag-bg);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px}
+.pg-tag svg{width:11px;height:11px}
+.pg-title{font-size:22px;font-weight:800;margin-bottom:4px}
+.pg-sub{font-size:14px;color:var(--text2);margin-bottom:22px}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-sm);transition:background .3s,border-color .3s}
+.ctitle{font-size:15px;font-weight:700;margin-bottom:14px}
+.crow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border2)}
+.crow:last-child{border-bottom:none;padding-bottom:0}
+.ckey{font-size:13px;color:var(--text2)}
+.cval{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:18px 18px 14px;transition:border-color .2s,box-shadow .2s}
+.stat-card:hover{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+.sico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.sico svg{width:19px;height:19px}
+.sico.b{background:rgba(0,183,255,0.12);color:var(--blue)}
+.sico.g{background:rgba(76,175,80,0.12);color:var(--green)}
+.sico.b2{background:rgba(45,140,255,0.12);color:var(--blue2)}
+.sico.a{background:rgba(255,179,71,0.12);color:var(--amber)}
+[data-theme="light"] .sico.b{background:rgba(0,136,204,0.1)}
+[data-theme="light"] .sico.g{background:rgba(46,139,58,0.1)}
+[data-theme="light"] .sico.b2{background:rgba(26,111,204,0.1)}
+[data-theme="light"] .sico.a{background:rgba(184,112,0,0.1)}
+.snum{font-size:25px;font-weight:800;line-height:1}
+.slbl{font-size:12px;color:var(--text2);margin-top:3px}
+.strend{font-size:11.5px;color:var(--green);margin-top:7px}
+
+/* ACTIONS */
+.act-row{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:18px}
+.acard{background:var(--surface2);border:1px solid var(--border);border-radius:15px;padding:20px 18px 16px;cursor:pointer;transition:all .22s;position:relative}
+.acard:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--shadow)}
+.aico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;background:var(--tag-bg)}
+.aico svg{width:21px;height:21px;color:var(--blue)}
+.atitle{font-size:14.5px;font-weight:700;margin-bottom:4px}
+.asub{font-size:12.5px;color:var(--text2);line-height:1.5}
+.aarr{position:absolute;bottom:16px;right:16px;width:27px;height:27px;border-radius:8px;background:var(--hover-bg);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;transition:all .2s}
+.acard:hover .aarr{background:var(--active-bg);color:var(--blue)}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 320px;gap:15px;margin-bottom:15px}
+.g2eq{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px}
+.g2st{display:grid;grid-template-columns:210px 1fr;gap:15px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;padding:8px 13px;text-align:left;border-bottom:1px solid var(--border)}
+tbody td{padding:11px 13px;font-size:13.5px;border-bottom:1px solid var(--border2);transition:background .15s}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--hover-bg)}
+.ltag{font-size:12px;font-weight:700;color:var(--blue)}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:700}
+.bdg-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.bdg.hi{background:rgba(76,175,80,0.13);color:var(--green)}
+.bdg.hi .bdg-dot{background:var(--green)}
+.bdg.md{background:rgba(255,179,71,0.13);color:var(--amber)}
+.bdg.md .bdg-dot{background:var(--amber)}
+.bdg.lo{background:rgba(255,92,108,0.12);color:var(--red)}
+.bdg.lo .bdg-dot{background:var(--red)}
+[data-theme="light"] .bdg.hi{background:rgba(46,139,58,0.1)}
+[data-theme="light"] .bdg.md{background:rgba(184,112,0,0.1)}
+[data-theme="light"] .bdg.lo{background:rgba(204,34,51,0.1)}
+
+/* SEC HEADER */
+.shdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.shdr h2{font-size:15px;font-weight:700}
+.slink{font-size:13px;color:var(--blue);cursor:pointer;font-weight:500}
+.slink:hover{text-decoration:underline}
+
+/* DOTS */
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sdot.on{background:var(--green);box-shadow:0 0 7px rgba(76,175,80,0.5)}
+.sdot.off{background:var(--red)}
+.pulse{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ACC BARS */
+.acc-item{margin-bottom:12px}
+.acc-item:last-child{margin-bottom:0}
+.acc-lr{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--text2)}
+.acc-lr span:last-child{font-weight:700;color:var(--text)}
+.acc-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.acc-fill{height:100%;border-radius:3px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 19px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .2s;border:none}
+.btn svg{width:15px;height:15px;flex-shrink:0}
+.btn-p{background:linear-gradient(135deg,var(--blue2),var(--blue));color:#fff}
+.btn-p:hover{opacity:.87;transform:translateY(-1px)}
+.btn-p:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-o{background:transparent;border:1px solid var(--border);color:var(--blue)}
+.btn-o:hover{background:var(--hover-bg);border-color:var(--blue)}
+.btn-g{background:var(--hover-bg);border:1px solid var(--border);color:var(--text)}
+.btn-g:hover{background:var(--active-bg);color:var(--blue)}
+.btn-d{background:rgba(255,92,108,0.1);border:1px solid rgba(255,92,108,0.2);color:var(--red)}
+.btn-d:hover{background:rgba(255,92,108,0.18)}
+.btn-rec{background:linear-gradient(135deg,#a0001a,#d4182e);color:#fff}
+.btn-rec:hover{opacity:.87}
+.btn-sm{padding:6px 13px;font-size:12.5px}
+
+/* TOGGLE */
+.tog{width:42px;height:23px;background:var(--border);border-radius:12px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--blue)}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.tog.on::after{left:22px}
+
+/* SELECT */
+.sel{background:var(--input-bg);border:1px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--text);font-size:13.5px;outline:none;transition:border .2s,background .3s}
+.sel option{background:var(--surface);color:var(--text)}
+.sel:focus{border-color:var(--blue)}
+
+/* CAMERA */
+.cambox{background:#000;border-radius:14px;aspect-ratio:16/9;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);margin-bottom:14px}
+.camph{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text3);text-align:center;padding:20px}
+.camph svg{width:50px;height:50px;opacity:.3}
+.camph p{font-size:13.5px}
+.camph small{font-size:12px;color:var(--text3)}
+#live-video{width:100%;height:100%;object-fit:cover;display:none;border-radius:14px}
+#upload-preview-video{width:100%;height:100%;object-fit:contain;display:none;border-radius:14px}
+.mbox{position:absolute;width:205px;height:108px;border:2px solid var(--blue);border-radius:18px;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 18px rgba(0,183,255,0.2);display:none;pointer-events:none}
+.mbox::before,.mbox::after{content:'';position:absolute;width:13px;height:13px;border-color:var(--blue);border-style:solid}
+.mbox::before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:3px 0 0}
+.mbox::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 3px}
+.cbadge{position:absolute;top:13px;left:13px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.7);border:1px solid rgba(0,183,255,.3);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--blue);backdrop-filter:blur(4px)}
+.ctimer{position:absolute;top:13px;right:13px;background:rgba(0,0,0,.7);border-radius:8px;padding:5px 12px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;backdrop-filter:blur(4px)}
+
+/* PROCESSING */
+.proc-c{display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px 20px 22px}
+.spwrap{width:88px;height:88px;position:relative;margin-bottom:26px}
+.spring{position:absolute;border-radius:50%;border-style:solid}
+.spring.out{width:88px;height:88px;top:0;left:0;border-width:3px;border-color:var(--border) var(--border) var(--border) var(--blue);animation:spin 1s linear infinite}
+.spring.inn{width:66px;height:66px;top:11px;left:11px;border-width:3px;border-color:var(--border) var(--blue2) var(--border) var(--border);animation:spin 1.5s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spico{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:var(--active-bg);display:flex;align-items:center;justify-content:center}
+.spico svg{width:18px;height:18px;color:var(--blue)}
+.psteps{width:100%;max-width:320px;margin-top:20px;display:flex;flex-direction:column;gap:8px}
+.pstep{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:11px;font-size:13.5px;transition:all .4s}
+.pstep.done{background:rgba(76,175,80,0.08);color:var(--green)}
+.pstep.cur{background:var(--active-bg);color:var(--blue)}
+.pstep.wait{color:var(--text3)}
+.stico{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .4s}
+.pstep.done .stico{background:rgba(76,175,80,0.15);color:var(--green)}
+.pstep.cur .stico{background:var(--active-bg);color:var(--blue);animation:pulse 1.2s infinite}
+.pstep.wait .stico{background:var(--border);color:var(--text3)}
+.prog-track{width:100%;max-width:320px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:16px 0 7px}
+.prog-el{height:100%;background:linear-gradient(90deg,var(--blue2),var(--blue));border-radius:3px;transition:width .6s ease}
+
+/* RESULTS */
+.vthumb{background:#000;border-radius:13px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);margin-bottom:13px;position:relative;overflow:hidden}
+#result-video{width:100%;height:100%;object-fit:contain;display:none}
+.playbtn{width:48px;height:48px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;cursor:pointer;padding-left:4px;transition:transform .2s;position:absolute}
+.playbtn:hover{transform:scale(1.09)}
+.playbtn svg{width:21px;height:21px;color:#fff}
+.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.ms{padding:11px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);text-align:center}
+.msv{font-size:18px;font-weight:800}
+.msl{font-size:11.5px;color:var(--text2);margin-top:2px}
+.pred-txt{font-size:16px;font-weight:500;line-height:1.75;padding:15px;background:var(--input-bg);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;min-height:80px}
+.wn{color:var(--text)}
+.wu{color:var(--amber);border-bottom:2px dashed rgba(255,179,71,0.4)}
+.tts-bar{display:flex;align-items:center;gap:11px;padding:11px 15px;background:var(--input-bg);border:1px solid var(--border);border-radius:12px}
+.ttsplay{width:35px;height:35px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;cursor:pointer;padding-left:3px;flex-shrink:0}
+.ttsplay svg{width:14px;height:14px;color:#fff}
+.wavebars{flex:1;display:flex;align-items:center;gap:2px;height:24px}
+.wbar{width:3px;border-radius:2px;background:var(--border);transition:height .25s}
+.ttstime{font-size:12px;color:var(--text3);white-space:nowrap}
+
+/* HISTORY */
+.hist-top{display:flex;gap:9px;margin-bottom:15px;align-items:center}
+.hist-s{flex:1;position:relative}
+.hist-s svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);width:15px;height:15px;pointer-events:none}
+.hist-s input{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:9px 14px 9px 35px;color:var(--text);font-size:13.5px;outline:none;-webkit-appearance:none;appearance:none;transition:border .2s,background .3s}
+.hist-s input::placeholder{color:var(--text3)}
+.hist-s input:focus{border-color:var(--blue)}
+
+/* SETTINGS */
+.setrow{display:flex;align-items:center;justify-content:space-between;padding:9px 0}
+.seti p{font-size:14px;font-weight:500}
+.seti span{font-size:12px;color:var(--text3)}
+.setg{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border2)}
+.setg:last-child{border-bottom:none;margin-bottom:0}
+.set-panel h2{font-size:18px;font-weight:800;margin-bottom:4px}
+.set-panel .sdesc{font-size:13.5px;color:var(--text2);margin-bottom:20px}
+.about-card{display:flex;align-items:center;gap:15px;padding:18px;background:var(--input-bg);border:1px solid var(--border);border-radius:14px;margin-bottom:18px}
+.about-card img{width:54px;height:54px;object-fit:contain}
+
+/* UPLOAD */
+.dropz{border:2px dashed var(--border);border-radius:16px;padding:48px 36px;text-align:center;cursor:pointer;transition:all .2s;background:var(--input-bg);margin-bottom:15px}
+.dropz:hover,.dropz.drag-over{border-color:var(--blue);background:var(--hover-bg)}
+.dico{width:60px;height:60px;border-radius:17px;background:var(--active-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.dico svg{width:30px;height:30px;color:var(--blue)}
+.fpills{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.fpill{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--tag-bg);color:var(--blue);border:1px solid var(--border)}
+#file-input{display:none}
+.lang-pills{display:flex;gap:8px}
+.lpill{padding:7px 17px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .18s}
+.lpill.active,.lpill:hover{background:var(--active-bg);color:var(--blue);border-color:var(--blue)}
+.model-grid{display:grid;grid-template-columns:1fr;gap:9px;margin-top:8px}
+.model-card{width:100%;text-align:left;background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:12px 13px;color:var(--text);transition:all .2s}
+.model-card:hover{border-color:var(--blue);background:var(--hover-bg)}
+.model-card.active{border-color:var(--blue);background:var(--active-bg);box-shadow:0 0 0 1px rgba(0,183,255,.15)}
+.model-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.model-name{font-size:13.5px;font-weight:800}
+.model-badge{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);background:var(--tag-bg);border:1px solid var(--border);border-radius:20px;padding:2px 8px;white-space:nowrap}
+.model-copy{font-size:12px;line-height:1.45;color:var(--text2);margin-bottom:8px}
+.model-card.active .model-copy{color:var(--text)}
+.model-metrics{display:flex;flex-wrap:wrap;gap:6px}
+.metric-chip{font-size:10.5px;font-weight:800;color:var(--blue);background:var(--tag-bg);border:1px solid var(--border);border-radius:20px;padding:3px 8px;white-space:nowrap}
+.metric-chip.alt{color:var(--green);background:rgba(76,175,80,0.12);border-color:rgba(76,175,80,0.2)}
+.metric-chip.warn{color:var(--amber);background:rgba(255,179,71,0.12);border-color:rgba(255,179,71,0.22)}
+.eval-note{font-size:12.5px;color:var(--text2);line-height:1.6;margin-top:12px}
+.eval-table td,.eval-table th{vertical-align:top}
+.eval-mode{font-weight:800;color:var(--text)}
+.eval-use{font-size:12px;color:var(--text2);line-height:1.45;margin-top:3px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 18px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow);z-index:9999;display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.22,.68,0,1.2);max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(76,175,80,0.3);color:var(--green)}
+.toast.error{border-color:rgba(255,92,108,0.3);color:var(--red)}
+.toast.info{border-color:var(--border);color:var(--blue)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;max-width:420px;width:90%;box-shadow:var(--shadow)}
+.modal h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.modal p{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6;white-space:pre-line}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end}
+.profile-modal{max-width:560px}
+.profile-modal .setrow{gap:14px;align-items:flex-start}
+.profile-modal .setrow>div{flex:1;min-width:0}
+.profile-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.profile-head p{margin:4px 0 0;white-space:normal}
+.profile-photo{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,var(--blue2),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800;cursor:pointer;border:1px solid var(--border);flex-shrink:0;background-size:cover;background-position:center}
+.profile-photo.has-image{color:transparent}
+.profile-input{width:100%;max-width:260px;flex:0 1 260px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;outline:none}
+.profile-input:focus{border-color:var(--blue)}
+.profile-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 18px}
+.profile-stat{background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:0}
+.profile-stat span{display:block;font-size:11px;color:var(--text3);margin-bottom:5px}
+.profile-stat strong{display:block;font-size:16px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:640px){.profile-stats{grid-template-columns:1fr}.profile-head{align-items:flex-start}}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--text3)}
+.empty-state svg{width:48px;height:48px;opacity:.3;margin-bottom:14px}
+.empty-state p{font-size:14px}
+
+/* INSTR */
+.instr-list{display:flex;flex-direction:column;gap:9px}
+.instr-item{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text2)}
+.instr-item svg{width:16px;height:16px;color:var(--blue);flex-shrink:0}
+
+/* AI HOOK BANNER */
+.ai-hook{background:rgba(0,183,255,0.05);border:1px dashed rgba(0,183,255,0.3);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px}
+.ai-hook svg{width:18px;height:18px;color:var(--blue);flex-shrink:0;margin-top:1px}
+.ai-hook-text{font-size:13px;color:var(--text2);line-height:1.6}
+.ai-hook-text strong{color:var(--blue);font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="brand">
+    <img src="HearMeOutt.png" alt="Hear Me Out" onerror="this.style.display='none'">
+    <span class="brand-name">Hear<em>Me</em>Out</span>
+  </div>
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="global-search" placeholder="Search predictions, history..." oninput="searchHistory(this.value)">
+  </div>
+  <div class="nav-right">
+    <div class="icon-btn" title="Help" onclick="showHelpGuide()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="av" id="top-avatar" title="Profile" onclick="openProfileModal()">TS</div>
+  </div>
+</nav>
+
+<div class="body">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div>
+    <div class="slabel">Main</div>
+    <div class="nitem active" onclick="go('dashboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</div>
+    <div class="nitem" onclick="go('recording',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>Live Recording</div>
+    <div class="nitem" onclick="go('upload',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload Video</div>
+    <div class="slabel">Analysis</div>
+    <div class="nitem" onclick="go('results',this)" id="nav-results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Results</div>
+    <div class="nitem" onclick="go('history',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 15"/></svg>History</div>
+    <div class="slabel">System</div>
+    <div class="nitem" onclick="go('settings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
+    <div class="nitem" onclick="go('about',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About</div>
+  </div>
+  <div class="sfoot">
+    <div class="ucard" onclick="openProfileModal()" title="Edit profile">
+      <div class="uav" id="sidebar-avatar">TS</div>
+      <div class="uinfo"><p id="sidebar-user-name">Therese Sameh</p><span id="sidebar-user-sub">View profile</span></div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ===== DASHBOARD ===== -->
+<div id="s-dashboard" class="screen active">
+  <div class="pg-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="live-time"></span></div>
+  <div class="pg-title" id="dash-welcome-title">Welcome Back, Therese</div>
+  <div class="pg-sub">Analyze lip movements with AI. Your assistant is ready.</div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="sico b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="snum" id="dash-total">0</div><div class="slbl">Total Predictions</div><div class="strend" id="dash-total-sub">No predictions yet</div></div>
+    <div class="stat-card"><div class="sico g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="snum" id="dash-conf">-</div><div class="slbl">Latest Model</div><div class="strend" id="dash-conf-sub">No model runs yet</div></div>
+    <div class="stat-card"><div class="sico b2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div><div class="snum" id="dash-videos">0</div><div class="slbl">Videos Processed</div><div class="strend" id="dash-videos-sub">Start recording!</div></div>
+    <div class="stat-card"><div class="sico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="snum">AI</div><div class="slbl">Model Status</div><div class="strend" id="dash-model-status">Ready to connect</div></div>
+  </div>
+  <div class="act-row">
+    <div class="acard" onclick="go('recording',document.querySelector('[onclick*=recording]'))"><div class="aico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></div><div class="atitle">Start Recording</div><div class="asub">Capture lip movements live with your camera</div><div class="aarr">&rarr;</div></div>
+    <div class="acard" onclick="go('upload',document.querySelector('[onclick*=upload]'))"><div class="aico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div class="atitle">Upload Video</div><div class="asub">Analyze pre-recorded videos in seconds</div><div class="aarr">&rarr;</div></div>
+    <div class="acard" onclick="go('history',document.querySelector('[onclick*=history]'))"><div class="aico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 15"/></svg></div><div class="atitle">View History</div><div class="asub">Browse and revisit your past predictions</div><div class="aarr">&rarr;</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="shdr"><h2>Recent Predictions</h2><span class="slink" onclick="go('history',document.querySelector('[onclick*=history]'))">View all &rarr;</span></div>
+      <div class="tbl-wrap" id="dash-recent-table">
+        <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No predictions yet.<br>Record or upload a video to get started.</p></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div class="card">
+        <div class="ctitle">System Status</div>
+        <div class="crow"><span class="ckey">Camera</span><span class="cval" id="cam-status"><span class="sdot off"></span>Not started</span></div>
+        <div class="crow"><span class="ckey">AI Model</span><span class="cval" id="ai-status"><span class="sdot off"></span>Not connected</span></div>
+        <div class="crow"><span class="ckey">Last Analysis</span><span class="cval" id="last-analysis">-</span></div>
+        <div class="crow"><span class="ckey">Saved Results</span><span class="cval" id="saved-count">0</span></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Model Activity</div>
+        <div id="acc-overview"><div style="font-size:13px;color:var(--text3);text-align:center;padding:10px 0">No completed detections yet</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LIVE RECORDING ===== -->
+<div id="s-recording" class="screen">
+  <div class="pg-tag">LIVE MODE</div>
+  <div class="pg-title">Live Recording</div>
+  <div class="pg-sub">Position your face within the frame and speak naturally.</div>
+
+  <div class="ai-hook">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div class="ai-hook-text"><strong>Live Model:</strong> the desktop app records a short clip, sends it to the laptop backend, and runs whichever model you select below.</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="cambox" id="cam-box">
+        <div class="camph" id="cam-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          <p>Camera preview will appear here</p>
+          <small>Click "Enable Camera" to begin</small>
+        </div>
+        <video id="live-video" autoplay muted playsinline></video>
+        <div class="mbox" id="mouth-box"></div>
+        <div class="cbadge" id="cam-badge" style="display:none"><span class="sdot on pulse"></span><span id="cam-badge-text">Camera Ready</span></div>
+        <div class="ctimer" id="rec-timer" style="display:none">00:00</div>
+      </div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn btn-p" id="btn-enable-cam" onclick="enableCamera()">Enable Camera</button>
+        <button class="btn btn-g" id="btn-flip" onclick="flipCamera()" style="display:none">Flip Camera</button>
+        <button class="btn btn-rec" id="btn-start-rec" onclick="startRecording()" disabled>Start Recording</button>
+        <button class="btn btn-d" id="btn-stop-rec" onclick="stopRecording()" style="display:none">Stop Recording</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div class="card">
+        <div class="ctitle">Live Model</div>
+        <div class="model-grid" id="live-model-grid">
+          <button class="model-card active" data-model="avhubert" onclick="selectLiveModel('avhubert')">
+            <div class="model-top"><span class="model-name">Aurora Sentence Reader</span><span class="model-badge">AV-HuBERT</span></div>
+            <div class="model-copy">Best for general lip reading, full-sentence clips, and live recording.</div>
+            <div class="model-metrics"><span class="metric-chip alt">92% high accuracy</span><span class="metric-chip">90% stable</span><span class="metric-chip warn">33-67s / 3s video</span></div>
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Run Options</div>
+        <div class="setrow"><div class="seti"><p>High Accuracy Detector</p><span>Uses the face-alignment detector when available</span></div><div class="tog" id="live-high-acc-tog" onclick="toggleDetectorMode('live','high-acc')"></div></div>
+        <div class="setrow"><div class="seti"><p>Aurora Stable Mode</p><span>Uses CPU face scanning and deterministic decoding for repeatable Aurora runs</span></div><div class="tog" id="live-stable-tog" onclick="toggleDetectorMode('live','stable')"></div></div>
+        <div class="setrow"><div class="seti"><p>Auto Arabic Translation</p><span>Runs the local translation model after prediction</span></div><div class="tog" id="live-auto-trans-tog" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Session Status</div>
+        <div class="crow"><span class="ckey">Camera</span><span class="cval" id="rec-cam-status"><span class="sdot off"></span>Not started</span></div>
+        <div class="crow"><span class="ckey">Recording</span><span class="cval" id="rec-status"><span class="sdot off"></span>Idle</span></div>
+        <div class="crow"><span class="ckey">Duration</span><span class="cval" id="rec-dur-display">00:00</span></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Capture Tips</div>
+        <div class="instr-list">
+          <div class="instr-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>Keep your face centered and well lit.</div>
+          <div class="instr-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg>Speak at a steady pace for sentence decoding.</div>
+          <div class="instr-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/></svg>The selected model runs on the laptop backend after recording.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== UPLOAD VIDEO ===== -->
+<div id="s-upload" class="screen">
+  <div class="pg-tag">UPLOAD MODE</div>
+  <div class="pg-title">Upload Video</div>
+  <div class="pg-sub">Choose a video and select the desktop model to run on the laptop.</div>
+
+  <div class="ai-hook">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div class="ai-hook-text"><strong>Production default:</strong> uploads call the local backend and run the selected model. Use PowerShell <strong>-Simulation</strong> only when you want mock predictions.</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="dropz" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <input id="file-input" type="file" accept="video/*" onchange="handleFileSelect(this.files[0])">
+        <div class="dico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <div class="ctitle" id="drop-title">Drop your video here</div>
+        <div class="pg-sub" id="drop-sub" style="margin-bottom:0">Supports MP4, MOV, AVI, MKV, WebM - up to 500MB</div>
+        <div class="fpills"><span class="fpill">MP4</span><span class="fpill">MOV</span><span class="fpill">AVI</span><span class="fpill">WEBM</span></div>
+      </div>
+
+      <div class="card" id="upload-preview-card" style="display:none">
+        <div class="ctitle">Selected Video</div>
+        <div class="cambox">
+          <video id="upload-preview-video" controls></video>
+        </div>
+        <div class="crow"><span class="ckey">File</span><span class="cval" id="upload-filename">-</span></div>
+        <div class="crow"><span class="ckey">Size</span><span class="cval" id="upload-filesize">-</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div class="card">
+        <div class="ctitle">Model Selection</div>
+        <div class="model-grid" id="upload-model-grid">
+          <button class="model-card active" data-model="avhubert" onclick="selectUploadModel('avhubert')">
+            <div class="model-top"><span class="model-name">Aurora Sentence Reader</span><span class="model-badge">AV-HuBERT</span></div>
+            <div class="model-copy">Best for general lip reading and full-sentence uploaded videos.</div>
+            <div class="model-metrics"><span class="metric-chip alt">92% high accuracy</span><span class="metric-chip">90% stable</span><span class="metric-chip warn">33-67s / 3s video</span></div>
+          </button>
+          <button class="model-card" data-model="lrw_ar" onclick="selectUploadModel('lrw_ar')">
+            <div class="model-top"><span class="model-name">Esma3ny</span><span class="model-badge">LRW-AR</span></div>
+            <div class="model-copy">Best for TV-news styled Arabic clips with one clear spoken word.</div>
+            <div class="model-metrics"><span class="metric-chip alt">73.9% word accuracy</span><span class="metric-chip">26.1% WER</span><span class="metric-chip warn">~7s / 1s video</span></div>
+          </button>
+          <button class="model-card" data-model="grid_lipnet" onclick="selectUploadModel('grid_lipnet')">
+            <div class="model-top"><span class="model-name">Lyra GRID Reader</span><span class="model-badge">LipNet</span></div>
+            <div class="model-copy">Best for GRID-based lip reading with short, front-facing English phrases.</div>
+            <div class="model-metrics"><span class="metric-chip alt">81% word accuracy</span><span class="metric-chip">19% WER</span><span class="metric-chip warn">~7s / 3s video</span></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ctitle">Run Options</div>
+        <div class="setrow"><div class="seti"><p>High Accuracy Detector</p><span>Uses the face-alignment detector when available</span></div><div class="tog" id="upload-high-acc-tog" onclick="toggleDetectorMode('upload','high-acc')"></div></div>
+        <div class="setrow" id="upload-stable-row"><div class="seti"><p>Aurora Stable Mode</p><span>Uses CPU face scanning and deterministic decoding for repeatable Aurora runs</span></div><div class="tog" id="upload-stable-tog" onclick="toggleDetectorMode('upload','stable')"></div></div>
+        <div class="setrow"><div class="seti"><p>Auto Arabic Translation</p><span>Runs the local translation model after prediction</span></div><div class="tog" id="upload-auto-trans-tog" onclick="this.classList.toggle('on')"></div></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:12px">
+          <button class="btn btn-p" id="btn-analyze-upload" onclick="analyzeUploadedVideo()" disabled style="opacity:.4;cursor:not-allowed">Run Selected Model</button>
+          <button class="btn btn-g" onclick="clearUpload()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROCESSING ===== -->
+<div id="s-processing" class="screen">
+  <div class="pg-tag">PROCESSING</div>
+  <div class="pg-title">Running Detection</div>
+  <div class="pg-sub" id="proc-subtitle">Waiting for a video.</div>
+  <div class="g2">
+    <div class="card">
+      <div class="proc-c">
+        <div class="spwrap">
+          <div class="spring out"></div>
+          <div class="spring inn"></div>
+          <div class="spico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M2 12h20"/></svg></div>
+        </div>
+        <div class="ctitle">Desktop Backend Is Working</div>
+        <div class="pg-sub" style="margin-bottom:0">Keep this window open while the selected model runs.</div>
+        <div class="prog-track"><div class="prog-el" id="proc-prog" style="width:0%"></div></div>
+        <div class="slbl" id="proc-pct">0% complete</div>
+        <div class="psteps">
+          <div class="pstep wait" id="step-1"><span class="stico">1</span><span>Upload received</span></div>
+          <div class="pstep wait" id="step-2"><span class="stico">2</span><span>Model running</span></div>
+          <div class="pstep wait" id="step-3"><span class="stico">3</span><span>Prediction decoding</span></div>
+          <div class="pstep wait" id="step-4"><span class="stico">4</span><span>Saving result</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Job Details</div>
+      <div class="crow"><span class="ckey">Input</span><span class="cval" id="proc-source">-</span></div>
+      <div class="crow"><span class="ckey">Size</span><span class="cval" id="proc-filesize">-</span></div>
+      <div class="crow"><span class="ckey">Model</span><span class="cval" id="proc-model">-</span></div>
+      <div class="crow"><span class="ckey">Detector</span><span class="cval" id="proc-mode-label">Fast Detector Mode</span></div>
+      <div class="crow"><span class="ckey">Elapsed</span><span class="cval" id="proc-elapsed">0s</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RESULTS ===== -->
+<div id="s-results" class="screen">
+  <div class="pg-tag">RESULT</div>
+  <div class="pg-title">Prediction Result</div>
+  <div class="pg-sub" id="result-sub">Complete a detection to see the prediction.</div>
+  <div class="g2">
+    <div>
+      <div class="vthumb">
+        <video id="result-video" controls></video>
+        <div class="playbtn" id="result-play-btn" onclick="playResultVideo()"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8 5 19 12 8 19 8 5"/></svg></div>
+      </div>
+      <div class="mini-stats">
+        <div class="ms"><div class="msv" id="res-words">0</div><div class="msl">Tokens</div></div>
+        <div class="ms"><div class="msv" id="res-dur">-</div><div class="msl">Duration</div></div>
+        <div class="ms"><div class="msv" id="res-model-mini">-</div><div class="msl">Model</div></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div class="card">
+        <div class="ctitle">Prediction</div>
+        <div class="pred-txt" id="res-predicted-text">(no prediction yet)</div>
+        <div class="lang-pills" style="margin-bottom:12px">
+          <button class="lpill active" onclick="pickResLang(this,'en')">English / Original</button>
+          <button class="lpill" onclick="pickResLang(this,'ar')">Arabic</button>
+        </div>
+        <div class="pred-txt" id="res-translation-box" style="font-size:14px;white-space:pre-wrap"></div>
+      </div>
+      <div class="tts-bar">
+        <div class="ttsplay" onclick="speakText()"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8 5 19 12 8 19 8 5"/></svg></div>
+        <div class="wavebars" id="waveform"></div>
+        <span class="ttstime" id="tts-label">Ready</span>
+      </div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="saveResult()">Save Result</button>
+        <button class="btn btn-o" onclick="exportText()">Export Text</button>
+        <button class="btn btn-g" onclick="go('upload',document.querySelector('[onclick*=upload]'))">Upload Another</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="s-history" class="screen">
+  <div class="pg-tag">HISTORY</div>
+  <div class="pg-title">History</div>
+  <div class="pg-sub">Browse completed laptop-backend predictions.</div>
+  <div class="hist-top">
+    <div class="hist-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="hist-search" placeholder="Search predictions, models, files..." oninput="filterHistory()"></div>
+    <button class="btn btn-d btn-sm" onclick="confirmClearHistory()">Clear All</button>
+  </div>
+  <div class="card"><div class="tbl-wrap" id="history-table-wrap"><div class="empty-state"><p>No history yet.<br>Complete your first analysis to see results here.</p></div></div></div>
+</div>
+
+<div id="s-settings" class="screen">
+  <div class="pg-tag">PREFERENCES</div>
+  <div class="pg-title">Settings</div>
+  <div class="pg-sub">Local production settings for HearMeOut.</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle">Interface</div>
+      <div class="setrow"><div class="seti"><p>Theme</p><span>Toggle between dark and light mode</span></div><div class="tog" id="theme-tog" onclick="toggleTheme()"></div></div>
+      <div class="setrow"><div class="seti"><p>Local History</p><span>Saved in this browser on this machine</span></div><span class="cval" id="about-saved-count">0</span></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Backend</div>
+      <div class="crow"><span class="ckey">Server</span><span class="cval" id="about-ai-status" style="color:var(--red)">Backend offline</span></div>
+      <div class="crow"><span class="ckey">Run Mode</span><span class="cval" id="about-run-mode">Production</span></div>
+      <div class="crow"><span class="ckey">Models</span><span class="cval">Aurora, Esma3ny, Lyra</span></div>
+      <div class="crow"><span class="ckey">Browser Live</span><span class="cval">Recorded clip uses selected model</span></div>
+      <div class="crow"><span class="ckey">Native Live</span><span class="cval">run_live_lipread.ps1</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="s-about" class="screen">
+  <div class="pg-tag">SYSTEM</div>
+  <div class="pg-title">About HearMeOut</div>
+  <div class="pg-sub">Model reference metrics from the current local evaluation set.</div>
+  <div class="card">
+    <div class="ctitle">Model Evaluation</div>
+    <div class="tbl-wrap">
+      <table class="eval-table">
+        <thead>
+          <tr><th>Model / Mode</th><th>WER</th><th>Word Accuracy</th><th>Inference Time</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="eval-mode">Aurora - High Accuracy</div><div class="eval-use">Best for general full-sentence lip reading when stronger face alignment is needed.</div></td>
+            <td>8.0%</td>
+            <td>92.0%</td>
+            <td>~67s for a 3s video</td>
+          </tr>
+          <tr>
+            <td><div class="eval-mode">Aurora - Stable</div><div class="eval-use">Best when repeatable Aurora runs are preferred over the high-accuracy detector path.</div></td>
+            <td>10.0%</td>
+            <td>90.0%</td>
+            <td>~33s for a 3s video</td>
+          </tr>
+          <tr>
+            <td><div class="eval-mode">Esma3ny</div><div class="eval-use">Best for TV-news styled Arabic single-word prediction clips.</div></td>
+            <td>26.1%</td>
+            <td>73.9%</td>
+            <td>~7s for a 1s video</td>
+          </tr>
+          <tr>
+            <td><div class="eval-mode">Lyra GRID Reader</div><div class="eval-use">Best for GRID-based lip reading with short, front-facing English phrases.</div></td>
+            <td>19.0%</td>
+            <td>81.0%</td>
+            <td>~7s for a 3s video</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="eval-note">These values are reference metrics from manual local tests. They are not per-video confidence scores, and they can change with lighting, camera angle, video quality, speaker style, and the exact test set.</div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<div id="toast" class="toast"><span id="toast-icon">OK</span><span id="toast-msg">Done</span></div>
+<div class="modal-overlay" id="confirm-modal"><div class="modal"><h3 id="modal-title">Are you sure?</h3><p id="modal-body">This action cannot be undone.</p><div class="modal-btns"><button class="btn btn-g btn-sm" id="modal-cancel-btn" onclick="closeModal()">Cancel</button><button class="btn btn-d btn-sm" id="modal-confirm-btn">Confirm</button></div></div></div>
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal profile-modal">
+    <div class="profile-head">
+      <label class="profile-photo" id="profile-photo" for="profile-photo-input" title="Change profile picture">TS</label>
+      <input id="profile-photo-input" type="file" accept="image/*" onchange="handleProfilePhoto(this.files[0])" style="display:none">
+      <div>
+        <h3>Profile</h3>
+        <p>Edit your local desktop profile and review overall usage.</p>
+      </div>
+    </div>
+    <div class="setrow">
+      <div><b>Name</b><span>This name appears in the dashboard and sidebar.</span></div>
+      <input class="profile-input" id="profile-name-input" type="text" maxlength="40" placeholder="Your name">
+    </div>
+    <div class="profile-stats">
+      <div class="profile-stat"><span>Total Model Runs</span><strong id="profile-total-runs">0</strong></div>
+      <div class="profile-stat"><span>Favorite Model</span><strong id="profile-top-model">-</strong></div>
+      <div class="profile-stat"><span>Preferred Method</span><strong id="profile-top-source">-</strong></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-g btn-sm" onclick="closeProfileModal()">Close</button>
+      <button class="btn btn-p btn-sm" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATE={stream:null,recorder:null,chunks:[],recInterval:null,recSeconds:0,currentBlob:null,uploadedFile:null,currentResult:null,facingMode:'user',ttsUtterance:null,uploadModel:'avhubert',liveModel:'avhubert',currentModelKey:'avhubert',currentSourceType:'upload',resultViewLang:'en',backendOnline:false,simulationMode:false,modelCatalog:{}};
+const API_BASE=window.HEARMEOUT_API_BASE||(window.location.protocol==='file:'?'http://localhost:8000':window.location.origin);
+const MODEL_PROFILES={avhubert:{key:'avhubert',name:'Aurora Sentence Reader',shortName:'Aurora',supportsLive:true,supportsUpload:true},lrw_ar:{key:'lrw_ar',name:'Esma3ny',shortName:'Esma3ny',supportsLive:false,supportsUpload:true},grid_lipnet:{key:'grid_lipnet',name:'Lyra GRID Reader',shortName:'Lyra',supportsLive:false,supportsUpload:true}};
+const PROFILE_KEY='hmo_profile',RUN_STATS_KEY='hmo_run_stats';
+function defaultProfile(){return{name:'Therese Sameh',photo:''}}
+function getProfile(){try{return{...defaultProfile(),...(JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}')||{})}}catch{return defaultProfile()}}
+function storeProfile(p){localStorage.setItem(PROFILE_KEY,JSON.stringify({...defaultProfile(),...p}))}
+function initials(name){const parts=String(name||'').trim().split(/\s+/).filter(Boolean);if(!parts.length)return'HU';return(`${parts[0][0]||''}${parts[1]?.[0]||parts[0][1]||''}`||'HU').toUpperCase()}
+function applyAvatar(el,p){if(!el)return;const has=!!p.photo;el.textContent=has?'':initials(p.name);el.style.backgroundImage=has?`url("${p.photo}")`:'';el.classList.toggle('has-image',has)}
+function defaultRunStats(){return{totalRuns:0,byModel:{},bySource:{},runKeys:{},lastRunAt:null}}
+function getRunStats(){try{const raw=JSON.parse(localStorage.getItem(RUN_STATS_KEY)||'{}')||{};return{...defaultRunStats(),...raw,byModel:raw.byModel||{},bySource:raw.bySource||{},runKeys:raw.runKeys||{}}}catch{return defaultRunStats()}}
+function storeRunStats(stats){localStorage.setItem(RUN_STATS_KEY,JSON.stringify(stats))}
+function statLeader(map){const rows=Object.entries(map||{}).filter(([,n])=>Number(n)>0);if(!rows.length)return'-';rows.sort((a,b)=>Number(b[1])-Number(a[1])||a[0].localeCompare(b[0]));return rows[0][0]}
+function sourceLabel(source){return source==='live'?'Live Recording':source==='upload'?'Uploaded Videos':(source||'-')}
+function refreshProfileUI(){const p=getProfile(),stats=getRunStats(),name=p.name||'HearMeOut User',total=Number(stats.totalRuns)||0;const sidebarName=document.getElementById('sidebar-user-name'),sidebarSub=document.getElementById('sidebar-user-sub'),welcome=document.getElementById('dash-welcome-title'),nameInput=document.getElementById('profile-name-input');if(sidebarName)sidebarName.textContent=name;if(sidebarSub)sidebarSub.textContent=`${total} model run${total===1?'':'s'}`;if(welcome)welcome.textContent=`Welcome Back, ${name.split(/\s+/)[0]||name}`;applyAvatar(document.getElementById('sidebar-avatar'),p);applyAvatar(document.getElementById('top-avatar'),p);applyAvatar(document.getElementById('profile-photo'),p);if(nameInput&&document.activeElement!==nameInput)nameInput.value=name;const topModel=statLeader(stats.byModel),topSource=statLeader(stats.bySource);const runsEl=document.getElementById('profile-total-runs'),modelEl=document.getElementById('profile-top-model'),sourceEl=document.getElementById('profile-top-source');if(runsEl)runsEl.textContent=total;if(modelEl)modelEl.textContent=topModel;if(sourceEl)sourceEl.textContent=topSource==='-'?'-':sourceLabel(topSource)}
+function noteModelRun(result){if(!result)return false;const stats=getRunStats(),runKey=String(result.jobId||result.id||`${result.modelKey||STATE.currentModelKey}:${result.createdAt||''}:${result.text||''}`);if(runKey&&stats.runKeys[runKey])return false;const p=modelProfile(result.modelKey||STATE.currentModelKey),model=result.modelShortName||result.modelName||p.shortName||'Unknown',source=result.source||STATE.currentSourceType||'upload';stats.totalRuns=(Number(stats.totalRuns)||0)+1;stats.byModel[model]=(Number(stats.byModel[model])||0)+1;stats.bySource[source]=(Number(stats.bySource[source])||0)+1;if(runKey)stats.runKeys[runKey]=new Date().toISOString();const keys=Object.keys(stats.runKeys);if(keys.length>600){keys.sort((a,b)=>String(stats.runKeys[a]).localeCompare(String(stats.runKeys[b]))).slice(0,keys.length-600).forEach(k=>delete stats.runKeys[k])}stats.lastRunAt=new Date().toISOString();storeRunStats(stats);refreshProfileUI();return true}
+function openProfileModal(){refreshProfileUI();document.getElementById('profile-modal')?.classList.add('show')}
+function closeProfileModal(){document.getElementById('profile-modal')?.classList.remove('show')}
+function saveProfile(){const input=document.getElementById('profile-name-input'),name=String(input?.value||'').trim();if(!name){showToast('Please enter a profile name','error');return}const p=getProfile();p.name=name;storeProfile(p);refreshProfileUI();closeProfileModal();showToast('Profile updated','success')}
+function handleProfilePhoto(file){if(!file)return;if(!file.type.startsWith('image/')){showToast('Please choose an image file','error');return}if(file.size>10*1024*1024){showToast('Profile photo is too large','error');return}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas'),size=240,ctx=canvas.getContext('2d'),scale=Math.max(size/img.width,size/img.height),w=img.width*scale,h=img.height*scale,x=(size-w)/2,y=(size-h)/2;canvas.width=size;canvas.height=size;ctx.drawImage(img,x,y,w,h);const p=getProfile();p.photo=canvas.toDataURL('image/jpeg',.84);storeProfile(p);refreshProfileUI();const input=document.getElementById('profile-photo-input');if(input)input.value='';showToast('Profile photo updated','success')};img.onerror=()=>showToast('Could not read this image','error');img.src=reader.result};reader.onerror=()=>showToast('Could not load this image','error');reader.readAsDataURL(file)}
+function go(id,el){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('s-'+id)?.classList.add('active');document.querySelectorAll('.sidebar .nitem').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');if(id==='history')renderHistory();if(id==='dashboard'||id==='settings')updateDashboard();}
+function toggleTheme(){const h=document.documentElement,t=document.getElementById('theme-tog');if(h.getAttribute('data-theme')==='dark'){h.setAttribute('data-theme','light');t?.classList.add('on')}else{h.setAttribute('data-theme','dark');t?.classList.remove('on')}}
+function tick(){const el=document.getElementById('live-time');if(el)el.textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}setInterval(tick,1000);tick();
+function modelProfile(key){return STATE.modelCatalog[key]||MODEL_PROFILES[key]||MODEL_PROFILES.avhubert}
+function runOptionEnabled(sourceType,key){const scope=sourceType==='live'?'live':'upload';return document.getElementById(`${scope}-${key}-tog`)?.classList.contains('on')||false}
+function toggleDetectorMode(sourceType,key){const scope=sourceType==='live'?'live':'upload',target=document.getElementById(`${scope}-${key}-tog`);if(!target)return;const turningOn=!target.classList.contains('on');target.classList.toggle('on',turningOn);if(!turningOn)return;const otherKey=key==='stable'?'high-acc':(key==='high-acc'?'stable':null);if(!otherKey)return;const other=document.getElementById(`${scope}-${otherKey}-tog`);if(other?.classList.contains('on')){other.classList.remove('on');showToast('Aurora Stable Mode cannot be used with High Accuracy Detector','info')}}
+function selectUploadModel(key){const p=modelProfile(key);if(!p.supportsUpload){showToast(`${p.name} is not available for uploaded videos`,'error');return}STATE.uploadModel=key;document.querySelectorAll('#upload-model-grid .model-card').forEach(c=>c.classList.toggle('active',c.dataset.model===key));const stableRow=document.getElementById('upload-stable-row');if(stableRow)stableRow.style.display=key==='avhubert'?'flex':'none';showToast(`${p.shortName} selected`,'info')}
+function selectLiveModel(key){const p=modelProfile(key);if(!p.supportsLive){showToast(`${p.name} is available for uploaded videos only`,'error');return}STATE.liveModel=key;document.querySelectorAll('#live-model-grid .model-card').forEach(c=>c.classList.toggle('active',c.dataset.model===key));showToast(`${p.shortName} selected for live`,'info')}
+async function apiJson(path,opt={}){const res=await fetch(path.startsWith('http')?path:`${API_BASE}${path}`,opt);let data={};try{data=await res.json()}catch{}if(!res.ok)throw new Error(data.error||`Request failed with status ${res.status}`);return data}
+async function loadModelCatalog(){try{const data=await apiJson('/api/models');let mode={simulation:false};try{mode=await apiJson('/api/mode')}catch{}STATE.modelCatalog={};(data.models||[]).forEach(m=>STATE.modelCatalog[m.key]={key:m.key,name:m.name,shortName:m.short_name||m.name,supportsLive:!!m.supports_live,supportsUpload:!!m.supports_upload});STATE.simulationMode=!!mode.simulation;STATE.backendOnline=true}catch(e){STATE.backendOnline=false;STATE.simulationMode=false;console.warn(e)}updateDashboard()}
+async function enableCamera(){try{showToast('Requesting camera access...','info');STATE.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:STATE.facingMode,width:{ideal:1280},height:{ideal:720}},audio:true});const v=document.getElementById('live-video');v.srcObject=STATE.stream;v.style.display='block';document.getElementById('cam-placeholder').style.display='none';document.getElementById('mouth-box').style.display='block';document.getElementById('cam-badge').style.display='flex';document.getElementById('cam-badge-text').textContent='Camera Ready';document.getElementById('rec-timer').style.display='block';document.getElementById('btn-enable-cam').style.display='none';document.getElementById('btn-flip').style.display='flex';document.getElementById('btn-start-rec').disabled=false;document.getElementById('rec-cam-status').innerHTML='<span class="sdot on pulse"></span>Active';document.getElementById('cam-status').innerHTML='<span class="sdot on pulse"></span>Active';showToast('Camera enabled','success')}catch(e){showToast('Camera access denied or unavailable','error');console.error(e)}}
+async function flipCamera(){STATE.facingMode=STATE.facingMode==='user'?'environment':'user';if(STATE.stream)STATE.stream.getTracks().forEach(t=>t.stop());STATE.stream=null;document.getElementById('btn-enable-cam').style.display='flex';document.getElementById('btn-flip').style.display='none';document.getElementById('btn-start-rec').disabled=true;document.getElementById('live-video').style.display='none';document.getElementById('cam-placeholder').style.display='flex';document.getElementById('mouth-box').style.display='none';document.getElementById('cam-badge').style.display='none';await enableCamera()}
+function startRecording(){if(!STATE.stream)return;STATE.chunks=[];STATE.recSeconds=0;const mt=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':(MediaRecorder.isTypeSupported('video/webm')?'video/webm':'video/mp4');STATE.recorder=new MediaRecorder(STATE.stream,{mimeType:mt});STATE.recorder.ondataavailable=e=>{if(e.data.size>0)STATE.chunks.push(e.data)};STATE.recorder.onstop=onRecordingDone;STATE.recorder.start(100);document.getElementById('btn-start-rec').style.display='none';document.getElementById('btn-stop-rec').style.display='flex';document.getElementById('btn-flip').style.display='none';document.getElementById('cam-badge-text').textContent='Recording';document.getElementById('rec-status').innerHTML='<span class="sdot on pulse"></span>Recording';STATE.recInterval=setInterval(()=>{STATE.recSeconds++;const v=formatDur(STATE.recSeconds);document.getElementById('rec-timer').textContent=v;document.getElementById('rec-dur-display').textContent=v},1000);showToast('Recording started','success')}
+function stopRecording(){if(STATE.recorder&&STATE.recorder.state!=='inactive')STATE.recorder.stop();clearInterval(STATE.recInterval);document.getElementById('btn-stop-rec').style.display='none';document.getElementById('btn-start-rec').style.display='flex';document.getElementById('rec-status').innerHTML='<span class="sdot off"></span>Stopped';document.getElementById('cam-badge-text').textContent='Camera Ready';showToast('Recording saved. Starting analysis...','info')}
+function onRecordingDone(){const blob=new Blob(STATE.chunks,{type:STATE.recorder.mimeType||'video/webm'});STATE.currentBlob=blob;STATE.uploadedFile=null;const dur=STATE.recSeconds;setTimeout(()=>startProcessing(blob,'Live Recording',formatDur(dur),dur,STATE.liveModel||'avhubert','live'),600)}
+function handleFileSelect(file){if(!file)return;if(file.size>500*1024*1024){showToast('File too large. Max 500MB.','error');return}STATE.uploadedFile=file;STATE.currentBlob=file;const url=URL.createObjectURL(file),pv=document.getElementById('upload-preview-video');pv.src=url;pv.style.display='block';document.getElementById('upload-preview-card').style.display='block';document.getElementById('upload-filename').textContent=file.name;document.getElementById('upload-filesize').textContent=formatBytes(file.size);document.getElementById('drop-title').textContent='File ready';document.getElementById('drop-sub').textContent=file.name;const b=document.getElementById('btn-analyze-upload');b.disabled=false;b.style.opacity='1';b.style.cursor='pointer';showToast(`"${file.name}" loaded`,'success')}
+function clearUpload(){STATE.uploadedFile=null;STATE.currentBlob=null;document.getElementById('upload-preview-card').style.display='none';document.getElementById('upload-preview-video').src='';document.getElementById('drop-title').textContent='Drop your video here';document.getElementById('drop-sub').textContent='Supports MP4, MOV, AVI, MKV, WebM - up to 500MB';document.getElementById('file-input').value='';const b=document.getElementById('btn-analyze-upload');b.disabled=true;b.style.opacity='.4';b.style.cursor='not-allowed'}
+function analyzeUploadedVideo(){if(!STATE.currentBlob)return;const name=STATE.uploadedFile?STATE.uploadedFile.name:'video';const size=STATE.uploadedFile?formatBytes(STATE.uploadedFile.size):'-';startProcessing(STATE.currentBlob,name,size,null,STATE.uploadModel,'upload')}
+function initDropZone(){const dz=document.getElementById('drop-zone');dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('video/'))handleFileSelect(f);else showToast('Please drop a video file','error')})}
+function startProcessing(blob,source,fileSize,recDur,modelKey='avhubert',sourceType='upload'){sourceType=sourceType||(recDur?'live':'upload');modelKey=modelKey||(sourceType==='live'?STATE.liveModel:STATE.uploadModel)||'avhubert';const p=modelProfile(modelKey),stable=modelKey==='avhubert'&&runOptionEnabled(sourceType,'stable');STATE.currentModelKey=modelKey;STATE.currentSourceType=sourceType;go('processing');document.getElementById('proc-source').textContent=source;document.getElementById('proc-filesize').textContent=fileSize||formatBytes(blob.size);document.getElementById('proc-model').textContent=p.shortName;document.getElementById('proc-subtitle').textContent=`Running ${p.name} on the laptop backend`;document.getElementById('proc-elapsed').textContent='0s';resetProcessingSteps();animateProgress(0,'Queued');document.getElementById('proc-mode-label').textContent=stable?'Aurora Stable Mode':(runOptionEnabled(sourceType,'high-acc')?'High Accuracy Mode':'Fast Detector Mode');let elapsed=0;const timer=setInterval(()=>{elapsed++;document.getElementById('proc-elapsed').textContent=elapsed+'s'},1000);runAnalysis(blob,modelKey,sourceType,source).then(async r=>{clearInterval(timer);if(runOptionEnabled(sourceType,'auto-trans'))await translateTextToArabic(r);updateJobProgress({progress:100,message:'Prediction ready'});setTimeout(()=>showResults(r,blob,recDur),650)}).catch(e=>{clearInterval(timer);console.error(e);document.getElementById('proc-subtitle').textContent='Prediction needs a clearer video';animateProgress(100,'Needs attention');showPredictionError(e,sourceType)})}
+function resetProcessingSteps(){['step-1','step-2','step-3','step-4'].forEach(id=>markStepWait(id))}function markStepWait(id){const e=document.getElementById(id);e.className='pstep wait';e.querySelector('.stico').textContent=id.split('-')[1]}function markStepCurrent(id){const e=document.getElementById(id);e.className='pstep cur';e.querySelector('.stico').textContent='*'}function markStepDone(id){const e=document.getElementById(id);e.className='pstep done';e.querySelector('.stico').textContent='OK'}function animateProgress(t,m=''){const n=Math.max(0,Math.min(100,Number(t)||0));document.getElementById('proc-prog').style.width=n+'%';document.getElementById('proc-pct').textContent=m?`${n}% - ${m}`:`${n}% complete`}function sleep(ms){return new Promise(r=>setTimeout(r,ms))}function normalizeConfidence(v){const n=Number(v);return Number.isFinite(n)?Math.max(0,Math.min(100,n)):null}
+function updateJobProgress(job){const p=Math.max(0,Math.min(100,Number(job.progress)||0));animateProgress(p,job.message||'');document.getElementById('proc-subtitle').textContent=job.message||'Running model on laptop backend';if(p<25)markStepCurrent('step-1');else if(p<60){markStepDone('step-1');markStepCurrent('step-2')}else if(p<90){markStepDone('step-1');markStepDone('step-2');markStepCurrent('step-3')}else if(p<100){markStepDone('step-1');markStepDone('step-2');markStepDone('step-3');markStepCurrent('step-4')}else ['step-1','step-2','step-3','step-4'].forEach(id=>markStepDone(id))}
+async function runAnalysis(blob,modelKey,sourceType,sourceLabel){const p=modelProfile(modelKey);const form=new FormData();const fallback=sourceType==='live'?`live-${Date.now()}.webm`:`upload-${Date.now()}.mp4`;const fileName=STATE.uploadedFile?.name||fallback;const file=blob instanceof File?blob:new File([blob],fileName,{type:blob.type||'video/webm'});const stable=modelKey==='avhubert'&&runOptionEnabled(sourceType,'stable'),detector=stable?'hog':(runOptionEnabled(sourceType,'high-acc')?'fa':'hog');form.append('video',file,fileName);form.append('source',sourceType);form.append('model',modelKey);form.append('detector',detector);if(stable)form.append('stable','1');updateJobProgress({progress:5,message:`Uploading to ${p.shortName}...`});const created=await apiJson('/api/predict/standalone',{method:'POST',body:form});if(!created.job_id)throw new Error('Backend did not return a job id');while(true){await sleep(1500);const data=await apiJson(`/api/public/jobs/${created.job_id}`);const job=data.job||{};updateJobProgress(job);if(job.status==='succeeded'){const r=job.result||{};const key=r.model_key||job.model_key||modelKey;const prof=modelProfile(key);return{id:r.id,jobId:job.id,text:r.predicted_text||'',textAr:r.arabic_text||'',confidence:normalizeConfidence(r.confidence),source:r.source||sourceType,sourceLabel,inputName:r.input_name||fileName,modelKey:key,modelName:r.model_name||prof.name,modelShortName:prof.shortName,outputDir:r.output_dir||'',topPredictions:Array.isArray(r.top_predictions)?r.top_predictions:[],createdAt:job.completed_at||new Date().toISOString()}}if(job.status==='failed')throw new Error(job.error||job.message||'Model command failed')}}
+function hasArabicText(t){return /[\u0600-\u06FF]/.test(String(t||''))}
+async function translateTextToArabic(result){if(!result||result.textAr||!result.text)return result?.textAr||'';if(hasArabicText(result.text)){result.textAr=result.text;return result.textAr}try{const data=await apiJson('/api/translate/standalone',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:result.text})});result.textAr=data.arabic_text||''}catch(e){result.translationError=e.message||'Arabic translation unavailable'}return result.textAr||''}
+function escapeHtml(v){const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML}function predictionTokens(t){const c=String(t||'').trim();if(!c)return[];return c.includes(' ')?c.split(/\s+/).filter(Boolean):Array.from(c)}function confidenceText(v){const n=normalizeConfidence(v);return n===null?'N/A':`${Math.round(n*10)/10}%`}function topPredictionText(items){if(!Array.isArray(items)||!items.length)return'';return items.slice(0,5).map((it,i)=>`${i+1}. ${it.label||it.text||it.word||''}${it.confidence===undefined?'':` (${confidenceText(it.confidence)})`}`).join('\n')}
+async function pickResLang(el,lang){STATE.resultViewLang=lang;el.closest('.lang-pills').querySelectorAll('.lpill').forEach(b=>b.classList.remove('active'));el.classList.add('active');if(!STATE.currentResult)return;const box=document.getElementById('res-translation-box');if(lang==='ar'){if(!STATE.currentResult.textAr&&!STATE.currentResult.translationError){box.textContent='Translating with the laptop Arabic model...';await translateTextToArabic(STATE.currentResult)}box.textContent=STATE.currentResult.textAr||STATE.currentResult.translationError||'Arabic translation is unavailable for this result.'}else{const top=topPredictionText(STATE.currentResult.topPredictions);box.textContent=top?`${STATE.currentResult.text}\n\nTop predictions:\n${top}`:STATE.currentResult.text}}
+function showResults(result,blob,recDur){const p=modelProfile(result.modelKey||STATE.currentModelKey);STATE.resultViewLang='en';STATE.currentResult={...result,modelKey:result.modelKey||p.key,modelName:result.modelName||p.name,modelShortName:result.modelShortName||p.shortName,confidence:normalizeConfidence(result.confidence)};const rv=document.getElementById('result-video');rv.src=URL.createObjectURL(blob);rv.style.display='none';document.getElementById('result-play-btn').style.display='flex';document.getElementById('res-model-mini').textContent=STATE.currentResult.modelShortName;const tokens=predictionTokens(STATE.currentResult.text);document.getElementById('res-words').textContent=tokens.length;document.getElementById('res-dur').textContent=recDur?formatDur(recDur):'-';document.getElementById('res-predicted-text').textContent=STATE.currentResult.text||'(empty prediction)';const top=topPredictionText(STATE.currentResult.topPredictions);document.getElementById('res-translation-box').textContent=top?`${STATE.currentResult.text}\n\nTop predictions:\n${top}`:STATE.currentResult.text;document.querySelectorAll('#s-results .lang-pills .lpill').forEach(b=>b.classList.toggle('active',b.textContent.trim()==='Original'));const src=STATE.currentResult.source==='live'?'Live recording':'Uploaded video';document.getElementById('result-sub').textContent=`${STATE.currentResult.modelName} | ${src} | ${tokens.length} token${tokens.length===1?'':'s'}`;saveResult(true);go('results',document.getElementById('nav-results'));showToast('Analysis complete','success')}
+function playResultVideo(){const rv=document.getElementById('result-video');rv.style.display='block';document.getElementById('result-play-btn').style.display='none';rv.play()}
+function saveResult(silent=false){if(!STATE.currentResult){if(!silent)showToast('No result to save','error');return}const history=getHistory();const dup=history.some(r=>(STATE.currentResult.jobId&&r.jobId===STATE.currentResult.jobId)||(STATE.currentResult.id&&r.backendId===STATE.currentResult.id));if(dup){if(!silent)showToast('Result is already in history','info');return}noteModelRun(STATE.currentResult);const date=STATE.currentResult.createdAt||new Date().toISOString(),backendId=STATE.currentResult.id||null,id=backendId?`#PR-${String(backendId).padStart(4,'0')}`:`#PR-${String(history.length+1).padStart(4,'0')}`;history.unshift({id,backendId,jobId:STATE.currentResult.jobId||null,text:STATE.currentResult.text||'',confidence:STATE.currentResult.confidence,tokenCount:predictionTokens(STATE.currentResult.text).length,modelKey:STATE.currentResult.modelKey,modelName:STATE.currentResult.modelName,modelShortName:STATE.currentResult.modelShortName,source:STATE.currentResult.source||STATE.currentSourceType,inputName:STATE.currentResult.inputName||'',outputDir:STATE.currentResult.outputDir||'',date,dateLabel:new Date(date).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})});localStorage.setItem('hmo_history',JSON.stringify(history));updateDashboard();if(!silent)showToast('Result saved to history','success')}
+function exportText(){if(!STATE.currentResult){showToast('No result to export','error');return}const top=topPredictionText(STATE.currentResult.topPredictions);const content=['HearMeOut Prediction Export','===========================',`Date: ${new Date().toLocaleString()}`,`Model: ${STATE.currentResult.modelName}`,`Source: ${STATE.currentResult.source==='live'?'Live recording':'Uploaded video'}`,`Input: ${STATE.currentResult.inputName||'-'}`,'','Predicted Text:',STATE.currentResult.text||'',STATE.currentResult.textAr?`\nArabic Translation:\n${STATE.currentResult.textAr}`:'',top?`\nTop Predictions:\n${top}`:'',STATE.currentResult.outputDir?`\nOutput Directory:\n${STATE.currentResult.outputDir}`:''].filter(Boolean).join('\n');const blob=new Blob([content],{type:'text/plain'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`hearmeout-${Date.now()}.txt`;a.click();URL.revokeObjectURL(url);showToast('Text exported','success')}
+async function speakText(){if(!STATE.currentResult)return;if(!('speechSynthesis'in window)){showToast('Text-to-speech not supported in this browser','error');return}let text=STATE.currentResult.text||'',lang=hasArabicText(text)?'ar-EG':'en-US';if(STATE.resultViewLang==='ar'){if(!STATE.currentResult.textAr&&!STATE.currentResult.translationError)await translateTextToArabic(STATE.currentResult);text=STATE.currentResult.textAr||STATE.currentResult.text;lang='ar-EG'}if(!String(text||'').trim()){showToast('No text available for speech','error');return}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.9;STATE.ttsUtterance=u;u.onstart=()=>document.getElementById('tts-label').textContent='Speaking...';u.onend=()=>document.getElementById('tts-label').textContent='Done';u.onerror=()=>{document.getElementById('tts-label').textContent='Unavailable';showToast('This Windows voice is not available in the browser','error')};window.speechSynthesis.speak(u)}
+function getHistory(){try{return JSON.parse(localStorage.getItem('hmo_history')||'[]')}catch{return[]}}function filterHistory(){renderHistory()}function deleteEntry(id){localStorage.setItem('hmo_history',JSON.stringify(getHistory().filter(r=>r.id!==id)));renderHistory();updateDashboard();showToast('Entry deleted','info')}function confirmClearHistory(){showModal('Clear All History','This will permanently delete all saved predictions. This cannot be undone.',()=>{localStorage.removeItem('hmo_history');renderHistory();updateDashboard();showToast('History cleared','info')})}
+function renderHistory(){const h=getHistory(),s=document.getElementById('hist-search')?.value?.toLowerCase()||'',rows=h.filter(r=>{const hay=`${r.text||''} ${r.modelName||''} ${r.inputName||''}`.toLowerCase();return !s||hay.includes(s)}),wrap=document.getElementById('history-table-wrap');if(!rows.length){wrap.innerHTML=`<div class="empty-state"><p>${h.length===0?'No history yet.<br>Complete your first analysis to see results here.':'No results match your search.'}</p></div>`;return}wrap.innerHTML=`<table><thead><tr><th>ID</th><th>Predicted Text</th><th>Model</th><th>Source</th><th>Date</th><th></th></tr></thead><tbody>${rows.map(r=>{const txt=(r.text||'').length>55?(r.text||'').slice(0,55)+'...':(r.text||''),src=r.source==='live'?'Live':'Upload';return`<tr><td style="color:var(--text3);font-size:12px">${escapeHtml(r.id)}</td><td title="${escapeHtml(r.text)}">${escapeHtml(txt)}</td><td><span class="ltag">${escapeHtml(r.modelShortName||r.modelName||'-')}</span></td><td><span class="ltag">${src}</span></td><td style="color:var(--text3);font-size:12.5px">${escapeHtml(r.dateLabel)}</td><td><button class="btn btn-sm btn-o" onclick="deleteEntry('${escapeHtml(r.id)}')">Delete</button></td></tr>`}).join('')}</tbody></table>`}
+function updateDashboard(){const h=getHistory(),total=h.length;document.getElementById('dash-total').textContent=total;document.getElementById('saved-count').textContent=total;document.getElementById('about-saved-count').textContent=total;document.getElementById('dash-total-sub').textContent=total?`${total} completed detection${total===1?'':'s'}`:'No predictions yet';document.getElementById('dash-videos').textContent=total;document.getElementById('dash-videos-sub').textContent=total?'Based on completed backend runs':'Start recording!';if(total){const latest=h[0];document.getElementById('dash-conf').textContent=latest.modelShortName||'-';document.getElementById('dash-conf-sub').textContent=latest.modelName||'Latest completed model run';document.getElementById('last-analysis').textContent=new Date(latest.date).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});const c={};h.forEach(r=>{const l=r.modelShortName||r.modelName||'Unknown';c[l]=(c[l]||0)+1});const max=Math.max(...Object.values(c));document.getElementById('acc-overview').innerHTML=Object.entries(c).map(([l,n])=>`<div class="acc-item"><div class="acc-lr"><span>${escapeHtml(l)}</span><span>${n} run${n===1?'':'s'}</span></div><div class="acc-bar"><div class="acc-fill" style="width:${Math.max(10,Math.round(n/max*100))}%;background:var(--blue)"></div></div></div>`).join('');document.getElementById('dash-recent-table').innerHTML=`<table><thead><tr><th>ID</th><th>Predicted Text</th><th>Model</th><th>Source</th><th>Date</th></tr></thead><tbody>${h.slice(0,5).map(r=>`<tr><td style="color:var(--text3);font-size:12px">${escapeHtml(r.id)}</td><td>${escapeHtml((r.text||'').slice(0,50))}</td><td><span class="ltag">${escapeHtml(r.modelShortName||'-')}</span></td><td><span class="ltag">${r.source==='live'?'Live':'Upload'}</span></td><td style="color:var(--text3);font-size:12.5px">${escapeHtml(r.dateLabel)}</td></tr>`).join('')}</tbody></table>`}else{document.getElementById('dash-conf').textContent='-';document.getElementById('dash-conf-sub').textContent='No model runs yet';document.getElementById('last-analysis').textContent='-';document.getElementById('acc-overview').innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:10px 0">No completed detections yet</div>';document.getElementById('dash-recent-table').innerHTML='<div class="empty-state"><p>No predictions yet.<br>Record or upload a video to get started.</p></div>'}const modeText=STATE.simulationMode?'Simulation backend':'Production backend';document.getElementById('ai-status').innerHTML=STATE.backendOnline?`<span class="sdot on pulse"></span>${STATE.simulationMode?'Simulation':'Connected'}`:'<span class="sdot off"></span>Start local backend';document.getElementById('dash-model-status').textContent=STATE.backendOnline?modeText:'Backend offline';const about=document.getElementById('about-ai-status');if(about){about.textContent=STATE.backendOnline?(STATE.simulationMode?'Connected (simulation)':'Connected'):'Backend offline';about.style.color=STATE.backendOnline?'var(--green)':'var(--red)'}const runMode=document.getElementById('about-run-mode');if(runMode){runMode.textContent=STATE.simulationMode?'Simulation':'Production';runMode.style.color=STATE.simulationMode?'var(--amber)':'var(--green)'}}function updateSettingsAIStatus(){updateDashboard()}function searchHistory(q){if(!q)return;const m=getHistory().filter(r=>(r.text||'').toLowerCase().includes(q.toLowerCase()));if(m.length){go('history',document.querySelector('[onclick*=history]'));document.getElementById('hist-search').value=q;renderHistory()}}
+let toastTimer;function showToast(msg,type='info'){const t=document.getElementById('toast'),icons={success:'OK',error:'X',info:'i'};document.getElementById('toast-icon').textContent=icons[type]||'i';document.getElementById('toast-msg').textContent=msg;t.className=`toast ${type} show`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3200)}
+function showModal(title,body,onConfirm){const cancel=document.getElementById('modal-cancel-btn'),confirm=document.getElementById('modal-confirm-btn');document.getElementById('modal-title').textContent=title;document.getElementById('modal-body').textContent=body;cancel.style.display='inline-flex';confirm.textContent='Confirm';confirm.className='btn btn-d btn-sm';confirm.onclick=()=>{onConfirm();closeModal()};document.getElementById('confirm-modal').classList.add('show')}
+function showMessageModal(title,body,label='Got it',onClose=null){const cancel=document.getElementById('modal-cancel-btn'),confirm=document.getElementById('modal-confirm-btn');document.getElementById('modal-title').textContent=title;document.getElementById('modal-body').textContent=body;cancel.style.display='none';confirm.textContent=label;confirm.className='btn btn-p btn-sm';confirm.onclick=()=>{closeModal();if(onClose)onClose()};document.getElementById('confirm-modal').classList.add('show')}
+function showPredictionError(err,sourceType){const msg=err?.message||'Prediction failed';if(msg.toLowerCase().includes('no face')){showMessageModal('No face detected',`${msg}\n\nTry this:\n- Keep your full face inside the camera frame.\n- Move closer so the mouth is visible.\n- Use stronger front lighting.\n- Record at least 3 to 5 seconds.\n- Avoid turning your head while speaking.`,sourceType==='live'?'Back to Camera':'Choose Another Video',()=>go(sourceType==='live'?'recording':'upload',document.querySelector(`[onclick*=${sourceType==='live'?'recording':'upload'}]`)));return}showMessageModal('Prediction could not finish',`${msg}\n\nTry another recording or upload a clearer video.`,'OK')}
+function showHelpGuide(){showMessageModal('HearMeOut guide','Live Recording:\n1. Aurora is used for live detection.\n2. Use Aurora Stable Mode when you want the same recording to decode more repeatably.\n3. Set High Accuracy Detector or Auto Arabic Translation if needed.\n4. Click Enable Camera.\n5. Keep your face centered and well lit.\n6. Record at least 3 to 5 seconds, then stop and wait for the backend model.\n\nUpload Video:\n1. Open Upload Video.\n2. Choose Aurora for sentence videos, Esma3ny for Arabic word clips, or Lyra for short English GRID-style clips.\n3. Aurora Stable Mode is available only when Aurora is selected.\n4. Set High Accuracy Detector or Auto Arabic Translation if needed.\n5. Click Run Selected Model.\n\nResults:\nUse Original or Arabic to switch the displayed text. The speaker button reads the active result text.\n\nProduction vs Simulation:\nProduction is the default. Use PowerShell -Simulation only for mock/demo predictions.','Got it')}
+function closeModal(){document.getElementById('confirm-modal').classList.remove('show')}document.getElementById('confirm-modal').addEventListener('click',e=>{if(e.target===document.getElementById('confirm-modal'))closeModal()});
+document.getElementById('profile-modal')?.addEventListener('click',e=>{if(e.target===document.getElementById('profile-modal'))closeProfileModal()});
+function initWaveform(){const wf=document.getElementById('waveform');for(let i=0;i<36;i++){const b=document.createElement('div');b.className='wbar';b.style.height=4+Math.random()*16+'px';wf.appendChild(b)}setInterval(()=>wf.querySelectorAll('.wbar').forEach(b=>{b.style.height=4+Math.random()*16+'px';b.style.background=Math.random()>.55?'var(--blue)':'var(--border)'}),280)}function formatDur(sec){const m=String(Math.floor(sec/60)).padStart(2,'0'),s=String(sec%60).padStart(2,'0');return m+':'+s}function formatBytes(bytes){if(bytes<1024)return bytes+' B';if(bytes<1024*1024)return(bytes/1024).toFixed(1)+' KB';return(bytes/(1024*1024)).toFixed(1)+' MB'}
+initDropZone();initWaveform();refreshProfileUI();updateDashboard();loadModelCatalog();
+</script>
+</body>
+</html>

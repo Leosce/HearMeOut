@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">HearMeOut</title>
+  <desc id="desc">Blue lips, audio wave, and speech bubble icon.</desc>
+  <rect width="512" height="512" fill="#061f36"/>
+  <g transform="translate(42 112)">
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M88 106c42-65 72-80 108-55 19 13 31 13 50 0 36-25 67-10 109 55-57-2-72-25-109-18-19 4-31 4-50 0-37-7-52 16-108 18z" fill="url(#lipTop)"/>
+      <path d="M89 148c60 5 78 30 132 30s73-25 132-30c-44 60-84 79-132 79s-88-19-132-79z" fill="url(#lipBottom)"/>
+      <path d="M76 130c16 0 16-24 32-24s16 52 32 52 16-58 32-58 16 56 32 56 16-48 32-48 16 45 32 45 16-23 32-23h53" stroke="#fff" stroke-width="8"/>
+      <path d="M50 106v48M35 118v24M20 126v9M4 132v1" stroke="#5d74ff" stroke-width="7"/>
+      <path d="M353 108h72c18 0 32 14 32 32v18c0 18-14 32-32 32h-72c-18 0-32-14-32-32v-18c0-18 14-32 32-32z" stroke="url(#bubble)" stroke-width="7"/>
+      <path d="M352 132h51M352 151h65M352 170h34" stroke="#2bbcff" stroke-width="6"/>
+    </g>
+    <text x="42" y="306" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="60" font-weight="800" letter-spacing="0">Hear<tspan fill="#5d74ff">Me</tspan><tspan fill="#20bdff">Out</tspan></text>
+  </g>
+  <defs>
+    <linearGradient id="lipTop" x1="90" x2="350" y1="30" y2="125">
+      <stop stop-color="#315cc9"/>
+      <stop offset="1" stop-color="#35a5f5"/>
+    </linearGradient>
+    <linearGradient id="lipBottom" x1="90" x2="350" y1="150" y2="230">
+      <stop stop-color="#234baa"/>
+      <stop offset="1" stop-color="#1c7ff0"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="320" x2="460" y1="105" y2="190">
+      <stop stop-color="#685cff"/>
+      <stop offset="1" stop-color="#17c2ff"/>
+    </linearGradient>
+  </defs>
+</svg>
