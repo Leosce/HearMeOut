@@ -1,3 +1,6 @@
+
+https://github.com/user-attachments/assets/1f13a3aa-0159-4aff-9641-237b49eaaee9
+
 # HearMeOut
 
 **HearMeOut** turns silent lip movement into text and speech. Point a camera at someone talking — live or from an uploaded clip — and get a real-time transcription, with optional Arabic translation and text-to-speech playback. It's built as an accessibility tool for lip-reading assistance, aimed at deaf and hard-of-hearing users and noisy/silent environments where audio isn't available.
